@@ -1,0 +1,16 @@
+{
+  "name": "spic",
+  "version": "1.0.0",
+  "description": "公益图床网站 - Cloudflare R2 + Workers",
+  "main": "index.js",
+  "scripts": {
+    "dev": "wrangler dev",
+    "deploy": "wrangler deploy"
+  },
+  "keywords": ["cloudflare", "image-hosting", "r2"],
+  "author": "",
+  "license": "MIT",
+  "devDependencies": {
+    "wrangler": "^3.0.0"
+  }
+}

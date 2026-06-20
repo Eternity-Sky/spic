@@ -1,0 +1,7 @@
+name = "spic"
+main = "src/worker.js"
+compatibility_date = "2024-01-01"
+
+[vars]
+ALLOWED_TYPES = "image/jpeg,image/png,image/gif,image/webp,image/svg+xml"
+MAX_FILE_SIZE = "10485760"
