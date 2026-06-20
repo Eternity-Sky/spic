@@ -145,7 +145,7 @@ function handleHome(env) {
 <body>
   <div class="container">
     <h1>🖼️ Spic</h1>
-    <p class="subtitle">公益图床 - GitHub + jsDelivr CDN</p>
+    <p class="subtitle">公益图床 - GitHub + gh-proxy CDN</p>
     
     <div class="setup-note">
       <strong>📝 首次使用：</strong>请先在 Cloudflare Workers 设置中添加环境变量 <code>GITHUB_TOKEN</code>、<code>GITHUB_REPO</code>（格式：用户名/仓库名）和 <code>GITHUB_BRANCH</code>
@@ -347,8 +347,8 @@ async function handleUpload(request, env) {
       );
     }
 
-    const jsdelivrUrl = `https://cdn.jsdelivr.net/gh/${env.GITHUB_REPO}@${branch}/images/${key}`;
-    return json({ success: true, url: jsdelivrUrl });
+    const proxyUrl = `https://gh-proxy.com/raw.githubusercontent.com/${env.GITHUB_REPO}/${branch}/images/${key}`;
+    return json({ success: true, url: proxyUrl });
   } catch (e) {
     console.error(e);
     return json({ success: false, message: "服务器错误" }, 500);
