@@ -2,6 +2,9 @@ name = "spic"
 main = "src/worker.js"
 compatibility_date = "2024-01-01"
 
-[vars]
-ALLOWED_TYPES = "image/jpeg,image/png,image/gif,image/webp,image/svg+xml"
-MAX_FILE_SIZE = "10485760"
+# 环境变量请在 Cloudflare Workers 网页控制台中配置：
+# - GITHUB_TOKEN (你的 GitHub Token)
+# - GITHUB_REPO (格式: 用户名/仓库名)
+# - GITHUB_BRANCH (可选，默认 main)
+# - ALLOWED_TYPES (可选)
+# - MAX_FILE_SIZE (可选)
