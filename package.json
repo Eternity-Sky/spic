@@ -7,10 +7,14 @@
     "dev": "wrangler dev",
     "deploy": "wrangler deploy"
   },
-  "keywords": ["cloudflare", "image-hosting", "r2"],
+  "keywords": [
+    "cloudflare",
+    "image-hosting",
+    "r2"
+  ],
   "author": "",
   "license": "MIT",
   "devDependencies": {
-    "wrangler": "^3.0.0"
+    "wrangler": "^4.103.0"
   }
 }

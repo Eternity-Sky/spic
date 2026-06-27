@@ -10,6 +10,10 @@ export default {
       return handleUpload(request, env);
     }
 
+    if (url.pathname === "/api/upload" && request.method === "POST") {
+      return handleApiUpload(request, env);
+    }
+
     return new Response("Not Found", { status: 404 });
   },
 };
@@ -319,6 +323,104 @@ async function handleUpload(request, env) {
     const buffer = await file.arrayBuffer();
     const base64 = btoa(String.fromCharCode(...new Uint8Array(buffer)));
     const key = generateKey(file.type);
+    const branch = env.GITHUB_BRANCH || "main";
+
+    const githubResponse = await fetch(
+      `https://api.github.com/repos/${env.GITHUB_REPO}/contents/images/${key}`,
+      {
+        method: "PUT",
+        headers: {
+          Authorization: `token ${env.GITHUB_TOKEN}`,
+          "Content-Type": "application/json",
+          "User-Agent": "Spic-Image-Hosting",
+        },
+        body: JSON.stringify({
+          message: `Upload image: ${key}`,
+          content: base64,
+          branch: branch,
+        }),
+      },
+    );
+
+    if (!githubResponse.ok) {
+      const error = await githubResponse.text();
+      console.error("GitHub API error:", error);
+      return json(
+        { success: false, message: "GitHub 上传失败，请检查配置" },
+        500,
+      );
+    }
+
+    const proxyUrl = `https://gh-proxy.com/raw.githubusercontent.com/${env.GITHUB_REPO}/${branch}/images/${key}`;
+    return json({ success: true, url: proxyUrl });
+  } catch (e) {
+    console.error(e);
+    return json({ success: false, message: "服务器错误" }, 500);
+  }
+}
+
+async function handleApiUpload(request, env) {
+  try {
+    let fileBuffer, fileType;
+
+    const contentType = request.headers.get("content-type") || "";
+
+    if (contentType.includes("multipart/form-data")) {
+      const formData = await request.formData();
+      const file = formData.get("image");
+
+      if (!file) {
+        return json({ success: false, message: "没有文件" }, 400);
+      }
+
+      fileBuffer = await file.arrayBuffer();
+      fileType = file.type;
+    } else if (contentType.includes("application/json")) {
+      const body = await request.json();
+
+      if (!body.image || !body.image.startsWith("data:")) {
+        return json({ success: false, message: "无效的图片数据" }, 400);
+      }
+
+      const matches = body.image.match(/^data:([^;]+);base64,(.+)$/);
+      if (!matches) {
+        return json({ success: false, message: "无效的 base64 格式" }, 400);
+      }
+
+      fileType = matches[1];
+      const base64Data = matches[2];
+      fileBuffer = Uint8Array.from(atob(base64Data), (c) =>
+        c.charCodeAt(0),
+      ).buffer;
+    } else {
+      return json({ success: false, message: "不支持的 Content-Type" }, 400);
+    }
+
+    const allowedTypes = (
+      env.ALLOWED_TYPES ||
+      "image/jpeg,image/png,image/gif,image/webp,image/svg+xml"
+    ).split(",");
+    if (!allowedTypes.includes(fileType)) {
+      return json({ success: false, message: "不支持的文件类型" }, 400);
+    }
+
+    const maxSize = parseInt(env.MAX_FILE_SIZE || "10485760");
+    if (fileBuffer.byteLength > maxSize) {
+      return json({ success: false, message: "文件太大" }, 400);
+    }
+
+    if (!env.GITHUB_TOKEN || !env.GITHUB_REPO) {
+      return json(
+        {
+          success: false,
+          message: "请先配置 GITHUB_TOKEN 和 GITHUB_REPO 环境变量",
+        },
+        500,
+      );
+    }
+
+    const base64 = btoa(String.fromCharCode(...new Uint8Array(fileBuffer)));
+    const key = generateKey(fileType);
     const branch = env.GITHUB_BRANCH || "main";
 
     const githubResponse = await fetch(
